@@ -1,8 +1,13 @@
+import datetime
+
 import streamlit as st
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 import pandas as pd
+import pycaret
 from pycaret import classification
+from pycaret.classification import *
 from pycaret.datasets import get_data
+from pycaret.internal.Display import Display
 
 
 TASK_LIST = ["分類", "回帰", "クラスタリング", "異常検出", "自然言語処理", "アソシエーション分析"]
@@ -19,7 +24,7 @@ def main_classification(uploaded_file: UploadedFile, is_sample_data: bool):
         サンプルデータを使用するかどうか
     """
     if (uploaded_file is not None) or (is_sample_data and uploaded_file is None):
-        st.header("読み込みデータの表示")
+        st.write("読み込んだデータ")
         if uploaded_file is not None:
             df = pd.read_csv(uploaded_file)
             # ファイルは後で
@@ -40,14 +45,67 @@ def main_classification(uploaded_file: UploadedFile, is_sample_data: bool):
             "使用しない特徴量を選択（未選択可）", list(df_drop_target)
         )
 
-        # 前処理
-        exp = classification.setup(
-            df_train, target=target, ignore_features=ignore_features, silent=True
-        )
-        st.write(exp)
-        df = classification.get_config("logging_param")
-        compare_models = classification.compare_models()
-        st.write(compare_models)
+        start = st.sidebar.button("開始")
+        if start:
+            # 前処理
+            exp = classification.setup(
+                df_train, target=target, ignore_features=ignore_features, silent=True
+            )
+            df = classification.get_config("logging_param")
+            # あとでモジュール化
+            # 使用するモデルの一覧
+            _all_metrics = (
+                pycaret.containers.metrics.classification.get_all_metric_containers(
+                    globals(), raise_errors=True
+                )
+            )
+            len_mod = 14  # 使用するmodelの長さ
+            progress_args = {"max": (4 * len_mod) + 4 + len_mod}
+            master_display_columns = (
+                ["Model"]
+                + [v.display_name for k, v in _all_metrics.items()]
+                + ["TT (Sec)"]
+            )
+            timestampStr = datetime.datetime.now().strftime("%H:%M:%S")
+            monitor_rows = [
+                ["Initiated", ". . . . . . . . . . . . . . . . . .", timestampStr],
+                [
+                    "Status",
+                    ". . . . . . . . . . . . . . . . . .",
+                    "Loading Dependencies",
+                ],
+                [
+                    "Estimator",
+                    ". . . . . . . . . . . . . . . . . .",
+                    "Compiling Library",
+                ],
+            ]
+            display = Display(
+                verbose=True,
+                html_param=True,
+                progress_args=progress_args,
+                master_display_columns=master_display_columns,
+                monitor_rows=monitor_rows,
+            )
+
+            # モデルの比較
+            # best_model = classification.compare_models(errors="raise", display=display)
+            best_model = classification.compare_models(errors="raise")
+            df_results = pull()
+            st.write("各モデルの評価")
+            # st.write(display.master_display)
+            st.write(df_results)
+            # モデルの作成
+            model = classification.create_model(best_model)
+            # df_results = pull()
+            # st.dataframe(df_results.rename(index=str))  # indexの型を変換しないと表示がうまくできない
+            # ハイパーパラメータのチューニング
+            tuned_model = classification.tune_model(model, n_iter=10)
+            df_results = pull()
+            st.dataframe(df_results.rename(index=str))  # indexの型を変換しないと表示がうまくできない
+            a = evaluate_model(tuned_model)
+            df_results = pull()
+            st.write(df_results)
 
 
 def main():
