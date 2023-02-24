@@ -18,8 +18,16 @@ if task == TASK_LIST[0]:
     # メイン画面
     main_classification(uploaded_file, is_sample_data)
 
-elif task == "回帰":
-    uploaded_file = st.sidebar.file_uploader("ファイルをアップロード", type="csv")
+elif task == TASK_LIST[1]:
+    # 回帰
+    uploaded_file = st.sidebar.file_uploader("Upload csv file", type="csv")
+    is_sample_data = st.sidebar.checkbox(
+        "Sample data", value=False
+    )  # uploaded_fileある時はFalseにしたい
+
+    # メイン画面
+    main_regression(uploaded_file, is_sample_data)
+
 elif task == "クラスタリング":
     st.write("Comming Soon")
 elif task == "異常検出":

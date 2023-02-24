@@ -11,14 +11,24 @@ st.header("ML Predictions")
 task = st.sidebar.selectbox("Select ML", TASK_LIST)
 if task == TASK_LIST[0]:
     # 分類
-    uploaded_model = st.sidebar.file_uploader("Upload ML model", type="pkl")
+    uploaded_model = st.sidebar.file_uploader(
+        "Upload ML model (Classification)", type="pkl"
+    )
     uploaded_csv = st.sidebar.file_uploader("Upload csv file", type="csv")
 
     # メイン画面
     predict_classification(uploaded_csv, uploaded_model)
 
-elif task == "回帰":
-    uploaded_file = st.sidebar.file_uploader("ファイルをアップロード", type="csv")
+elif task == TASK_LIST[1]:
+    # 分類
+    uploaded_model = st.sidebar.file_uploader(
+        "Upload ML model (Regression)", type="pkl"
+    )
+    uploaded_csv = st.sidebar.file_uploader("Upload csv file", type="csv")
+
+    # メイン画面
+    predict_regression(uploaded_csv, uploaded_model)
+
 elif task == "クラスタリング":
     st.write("Comming Soon")
 elif task == "異常検出":
