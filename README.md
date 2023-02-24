@@ -1,6 +1,7 @@
 # PyCaret Machine Learning Application
 
-PyCaretの機械学習をGUIで操作できるアプリケーション
+GUI Application for ML(PyCaret)
 
-#### requirements
+## requirements
+
 Python version：3.6 - 3.8
